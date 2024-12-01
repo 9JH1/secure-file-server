@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div class="shadow" id="server">
+        <input type="password" placeholder="Server Password" id="server-password">
+        <button id="server-show-password">Show Password</button>
+        <button id="server-submit">Submit</button>
+        <div id="server-status">Enter Password</div>
+    </div>
+    <div class="control">
+        <button class="unsafe" disabled>decrypt all <span class="tip">(fast + server intensive)</span></button>
+        <button class="unsafe" disabled>hotload all <span class="tip">(fast + client intensive)</span></button>
+        <button class="safe">sample load <span class="tip">(moderate speed)</span></button>
+        <button class="safe" disabled>encrypt all <span class="tip">(fast + server intensive)</span></button>
+        <button class="safe" disabled>encrypt selected</button>
+        <button class="safe" disabled>decrypt selected</button>
+        <div id="encryption">
+            <input type="password" placeholder="Server Password" id="encryption-password">
+            <button id="encryption-show-password">Show Password</button>
+            <button id="encryption-submit">Submit</button>
+        </div>
+    </div>
+    <div class="files" id="files">
+
+        <div class="spacer">loading more files...</div>
+    </div>
+    <script>
+        let ip = "192.168.68.105:4040"
+        let server_password = ""
+        function getData(endpoint) {
+            return fetch(`http://${ip}/${endpoint}`)
+                .then((res) => res.text())
+                .catch((error) => {
+                    errorcount++;
+                    if (errorcount > 10) {
+                        console.log("toggling off server requests due to too many errors")
+                    }
+                    console.error(error);
+                });
+        }
+        (function () {
+            const server = document.getElementById("server");
+            const password = document.getElementById("server-password");
+            const submit = document.getElementById("server-submit");
+            const status = document.getElementById("server-status");
+            const showPassword = document.getElementById("server-show-password");
+            async function loadKey() {
+                status.innerHTML = "Generating Key..."
+                submit.disabled = true;
+                password.disabled = true;
+                let key = await getData(`encrypt/${password.value}`)
+                status.innerHTML = key
+                setTimeout(async () => {
+                    // more scopes but its gotta look cool
+                    status.innerHTML = "Testing Value..."
+                    let res = await getData(`${key}`);
+                    if (res == "welcome") {
+                        server_password = key
+                        status.innerHTML = "Key Accepted!"
+                        setTimeout(() => { server.remove() }, 300)
+                        if (isStorageCapable()) {
+                            localStorage.setItem("server_password", key)
+                        }
+                    } else {
+                        status.innerHTML = "Key Not Accepted"
+                        submit.disabled = false;
+                        password.disabled = false;
+                        password.value = "";
+                    }
+                }, 100)
+
+            }
+            submit.addEventListener("click", loadKey)
+            password.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    loadKey();
+                }
+            });
+            showPassword.addEventListener("mousedown", () => {
+                password.type = "text"
+            })
+            showPassword.addEventListener("mouseup", () => {
+                password.type = "password"
+            })
+        })();
+        (function () {
+
+            const encryption = document.getElementById("encryption");
+            const password = document.getElementById("encryption-password");
+            const submit = document.getElementById("encryption-submit");
+            const showPassword = document.getElementById("encryption-show-password");
+            async function loadKey() {
+                password.value = ""
+            }
+            submit.addEventListener("click", loadKey)
+            password.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    loadKey();
+                }
+            });
+            showPassword.addEventListener("mousedown", () => {
+                password.type = "text"
+            })
+            showPassword.addEventListener("mouseup", () => {
+                password.type = "password"
+            })
+        })();
+        (async function () {
+            if (isStorageCapable() && localStorage.getItem("server_password") != undefined) {
+                let key = localStorage.getItem("server_password");
+                let res = await getData(`${key}`);
+                if (res == "welcome") {
+                    // works
+
+                    document.getElementById("server").remove()
+                    server_key = key
+                }
+            }
+
+        })()
+        async function loadFiles() {
+            const files = document.getElementById("files")
+            const fileList = await getData("key")
+        }
+        function isStorageCapable() {
+            if (typeof (Storage) !== "undefined") {
+                return true
+            } else {
+                return false
+            }
+        }
+    </script>
+</body>
+
+</html>

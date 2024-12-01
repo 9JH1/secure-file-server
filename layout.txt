@@ -1,0 +1,89 @@
+the encryption process on this software is quite simple.  
+for this software ive chosen Fernet as my cryptography tool of choice
+fernet can be used to encrypt and decrypt files using a secret key
+the key is a password and a salt which acts as a uniquifyer to the key 
+to make sure that the generated key is as abstract as possible, this 
+concept ensures security.
+
+to make this process simpler for you ive adapted this password-salt method 
+to use only one password, this is done by reversing the password string and 
+using that as the salt. for example
+
+(Fernet key = salt + password)
+
+eg
+key = "password123" + 'EA6L3ysLepTNVObBNhlr-w=='
+
+and this method
+key = "password123" + "321drowssap"
+
+its a slight bit less secure but rest assured your password is encrypted with 
+sha256 before the key is generated to add an aditional layer of encryption :D
+
+yogu can generate a password using the ./gen/gen_new_method file calling like
+so
+
+./gen/gen_new_method --password password_go_here
+
+use a url safe password so no spaces slashes or plus characters
+
+=============================================================================
+
+if a server is to use this method of encryption it would need to decrypt every file 
+individually and that would take quite a long time especailly if the website the 
+server is serving has other post-processing, to reduce this effect ive intergrated a
+file hotload method which loads a file decrypts it to a local file breifly and then 
+the base64 is then added to a json file which is served directly to the website via 
+the server file.
+
+this method is undenably wrong as there is not one but TWO times where a decrypted 
+file can be viewed. to combat this ive changed the method to instead generate and 
+serve the json code as a script varible. ive also made it so the base64 is added 
+to the json directly from the decoded data so that it can be read more simply
+
+examples
+
+before
++----------------+     +-----------------------+    +-------------------------------+
+| encrypted file |  -> | decypted json library | -> | served to website from server |
++----------------+     +-----------------------+    +-------------------------------+
+
+after:
++-------------------------------+
+| served to website from server |
++-------------------------------+
+
+this server that i am refering too is a local webserver run using flask which
+can be interactable across all devices on the network ( this can be furthered 
+with port forwarding ). this webserver has one public endpoint that being the
+"/" port which is accessed as the default when visiting the servers ip address
+in a browser, now having only one public endpoint is impossible as the website
+that lets you view your files NEEDS to be able to access other endpoints in 
+order to get information on things like server status and of course the actual
+files. this can be done securly using another password system, what ive done 
+is ive made it so that all other endpoints are started with a encrypted key
+this key is gathered securly too ( unlike other software ive designed ).
+
+example here are the endpoints available from our webserver
+
+/ -> RENDER WEBSITE 
+/files -> SERVE FILES
+
+this is not very safe as the user can simply visit the files endpoint to gain
+non user friedly data that is not supposed to be viewed. 
+
+here is an example using my new improved method
+
+/ -> RENDER WEBSITE
+/key/<password> -> RETURN ENCRYPTED PASSWORD
+/5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d/files -> SERVE FILES
+
+this new method has an endpoint that encryptes and returns whatever argument is parsed
+ into it, the other endpoint is our files which has a encypted message infront of it. 
+ this message is an encrypted word.
+
+ to access the files the website would ask the user for their "password" this would then
+ be put into the endpoint that encrypts stuff, this return is then used as that large chunk
+ before the other endpoint, if the users password is correct then it will access the endpoint
+ perfectly fine but if the users password is not correct it will not work, this is a foolproof 
+ way to protect the endpoints from curious users.
