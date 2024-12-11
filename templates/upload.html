@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiple File Upload</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        input[type="file"] {
+            margin: 10px 0;
+        }
+
+        button {
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+
+        .message {
+            margin-top: 20px;
+            color: green;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Upload Multiple Files</h1>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <input type="file" id="fileInput" name="files" multiple required>
+            <br>
+            <button type="submit">Upload</button>
+        </form>
+        <div class="message" id="message"></div>
+    </div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const formData = new FormData();
+            const fileInput = document.getElementById('fileInput');
+            const messageElement = document.getElementById('message');
+
+            if (fileInput.files.length === 0) {
+                messageElement.textContent = 'Please select at least one file.';
+                messageElement.style.color = 'red';
+                return;
+            }
+
+            messageElement.textContent = 'Uploading files...';
+            messageElement.style.color = 'blue';
+
+            // Upload each file separately
+            const files = fileInput.files;
+            let uploadCount = 0;
+            let successCount = 0;
+            let errorCount = 0;
+
+            for (let i = 0; i < files.length; i++) {
+                const currentFile = files[i];
+                const fileFormData = new FormData();
+                fileFormData.append('files', currentFile);
+
+                fetch('http://192.168.68.105:4040/75e9bc89514d1b8ca251cbd922500acee7dd102922cb4e671e9dbdf63cbbdd8c/upload_end', {
+                    method: 'POST',
+                    body: fileFormData,
+                })
+                    .then(response => response.text())
+                    .then(data => {
+                        uploadCount++;
+                        if (data.includes('successfully')) {
+                            successCount++;
+                        } else {
+                            errorCount++;
+                        }
+                        updateMessage(uploadCount, successCount, errorCount, files.length);
+                    })
+                    .catch(error => {
+                        uploadCount++;
+                        errorCount++;
+                        updateMessage(uploadCount, successCount, errorCount, files.length);
+                    });
+            }
+
+            // Update the message based on upload progress
+            function updateMessage(uploadCount, successCount, errorCount, totalFiles) {
+                if (uploadCount === totalFiles) {
+                    if (errorCount > 0) {
+                        messageElement.textContent = `${successCount} files uploaded successfully, ${errorCount} failed.`;
+                        messageElement.style.color = 'red';
+                    } else {
+                        messageElement.textContent = `${successCount} files uploaded successfully.`;
+                        messageElement.style.color = 'green';
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

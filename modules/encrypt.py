@@ -3,91 +3,120 @@ from os import walk
 from os.path import join
 from cryptography.fernet import Fernet
 import base64
-fernet = ""
+
+fernet = None
 
 def encrypt_string(hash_string):
-    sha_signature = hashlib.sha256(hash_string.encode()).hexdigest()
-    return sha_signature
+    try:
+        return hashlib.sha256(hash_string.encode()).hexdigest()
+    except Exception as e:
+        print(f"Error in encrypt_string: {e}")
+        return None
 
 def set_key(a):
     global fernet
-    fernet = Fernet(a)
+    try:
+        fernet = Fernet(a)
+    except Exception as e:
+        print(f"Error setting key: {e}")
 
 def list_directory(path):
-    result = []
-    for root, dirs, files in walk(path):
-        for file in files:
-            result.append(join(root, file).replace(path,""))
-    return result
+    try:
+        return [join(root, file).replace(path, "") for root, _, files in walk(path) for file in files]
+    except Exception as e:
+        print(f"Error listing directory: {e}")
+        return []
 
 def encrypt_file(path):
-    global fernet
-    with open(path,'rb') as file:
-        first = file.read()
-    second = fernet.encrypt(first)
-    with open(path, 'wb') as file:
-        file.write(second)
-    print("encrypted: " + path)
+    try:
+        with open(path, 'rb') as file:
+            first = file.read()
+        encrypted = fernet.encrypt(first)
+        with open(path, 'wb') as file:
+            file.write(encrypted)
+        print(f"encrypted: {path}")
+    except Exception as e:
+        print(f"Error encrypting file {path}: {e}")
 
 def decrypt_file(path):
-    global fernet
-    with open(path,'rb') as file:
-        first = file.read()
-    second = fernet.decrypt(first)
-    with open(path, 'wb') as file:
-        file.write(second)
-    print("decrypted: "+path)
+    try:
+        with open(path, 'rb') as file:
+            first = file.read()
+        decrypted = fernet.decrypt(first)
+        with open(path, 'wb') as file:
+            file.write(decrypted)
+        print(f"decrypted: {path}")
+    except Exception as e:
+        print(f"Error decrypting file {path}: {e}")
 
 def encrypt_directory(path):
-    for root, dirs, files in walk(path):
+    for root, _, files in walk(path):
         for file in files:
-            full_path = join(root, file)
-            encrypt_file(full_path)
+            encrypt_file(join(root, file))
 
 def decrypt_directory(path):
-    for root, dirs, files in walk(path):
+    for root, _, files in walk(path):
         for file in files:
-            full_path = join(root, file)
-            decrypt_file(full_path)
+            decrypt_file(join(root, file))
 
 def decrypt_file_return_string(path):
-    global fernet
-    with open(path,'rb') as file:
-        first = file.read()
-    second = fernet.decrypt(first)
-    print("decrypted: " + path)
-    return second
+    try:
+        with open(path, 'rb') as file:
+            first = file.read()
+        decrypted = fernet.decrypt(first)
+        print(f"decrypted: {path}")
+        return decrypted
+    except Exception as e:
+        print(f"Error decrypting file {path}: {e}")
+        return None
+
+def encrypt_string_return_string(string):
+    try:
+        return fernet.encrypt(string.encode())
+    except Exception as e:
+        print(f"Error encrypting string: {e}")
+        return None
+
+def decrypt_string_return_string(string):
+    try:
+        return fernet.decrypt(string.decrypt())
+    except Exception as e:
+        print(f"Error decrypting string: {e}")
+        return None
 
 def decrypt_file_return_string_base64(path):
-    global fernet
-    with open(path,'rb') as file:
-        first = file.read()
-    second = fernet.decrypt(first)
-    print("decrypted: " + path)
-    base64_data = base64.b64encode(second)
-    base64_string = base64_data.decode("utf-8")
-    return base64_string
+    try:
+        with open(path, 'rb') as file:
+            first = file.read()
+        decrypted = fernet.decrypt(first)
+        base64_string = base64.b64encode(decrypted).decode("utf-8")
+        print(f"decrypted: {path}")
+        return base64_string
+    except Exception as e:
+        print(f"Error in decrypt_file_return_string_base64: {e}")
+        return None
 
 def decrypt_directory_return_string(path):
-    # dict where key is file extension :D
     result = {}
-    for root, dirs, files in walk(path):
-        for file in files:
-            ext = file.split('.')
-            ext = ext[len(ext)-1]
-            result[ext] = decrypt_file_return_string(join(root, file))
+    try:
+        for root, _, files in walk(path):
+            for file in files:
+                ext = file.split('.')[-1]
+                result[ext] = decrypt_file_return_string(join(root, file))
+    except Exception as e:
+        print(f"Error in decrypt_directory_return_string: {e}")
     return result
 
 def decrypt_directory_return_string_base64(path):
-    # dict where key is file extension :D
     result = {}
-    for root, dirs, files in walk(path):
-        for file in files:
-            ext = file.split('.')
-            ext = ext[len(ext)-1]
-            
-            second = decrypt_file_return_string(join(root, file))
-            base64_data = base64.b64encode(second)
-            base64_string = base64_data.decode("utf-8")
-            result[ext] = base64_string
+    try:
+        for root, _, files in walk(path):
+            for file in files:
+                ext = file.split('.')[-1]
+                decrypted = decrypt_file_return_string(join(root, file))
+                if decrypted:
+                    base64_string = base64.b64encode(decrypted).decode("utf-8")
+                    result[ext] = base64_string
+    except Exception as e:
+        print(f"Error in decrypt_directory_return_string_base64: {e}")
     return result

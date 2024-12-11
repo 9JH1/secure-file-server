@@ -34,12 +34,13 @@
     <script>
         let ip = "192.168.68.105:4040"
         let server_password = ""
+        let error_count = 0
         function getData(endpoint) {
-            return fetch(`http://${ip}/${endpoint}`)
+            return fetch(`http://${ip}/${endpoint}`, { signal: AbortSignal.timeout(5000) })
                 .then((res) => res.text())
                 .catch((error) => {
-                    errorcount++;
-                    if (errorcount > 10) {
+                    error_count++;
+                    if (error_count > 10) {
                         console.log("toggling off server requests due to too many errors")
                     }
                     console.error(error);
@@ -69,7 +70,7 @@
                             localStorage.setItem("server_password", key)
                         }
                     } else {
-                        status.innerHTML = "Key Not Accepted"
+                        status.innerHTML = "Key Not Accepted."
                         submit.disabled = false;
                         password.disabled = false;
                         password.value = "";
@@ -114,13 +115,19 @@
         })();
         (async function () {
             if (isStorageCapable() && localStorage.getItem("server_password") != undefined) {
+
+                document.getElementById("server-status").innerHTML = "Loading Details From Storage"
                 let key = localStorage.getItem("server_password");
+
+                document.getElementById("server-status").innerHTML = "Testing Value..."
                 let res = await getData(`${key}`);
                 if (res == "welcome") {
                     // works
-
+                    status.innerHTML = "Key Accepted!"
                     document.getElementById("server").remove()
                     server_key = key
+                } else {
+                    document.getElementById("server-status").innerHTML = "Key Not Accepted."
                 }
             }
 
