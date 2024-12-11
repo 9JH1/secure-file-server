@@ -4,6 +4,7 @@ from modules.encrypt import *
 from modules.gen import generate_key
 import subprocess
 import socket
+import io
 from PIL import Image
 from shutil import move
 import time
@@ -185,8 +186,8 @@ def return_files_low_quality():
             result.append(os.path.join(file_dir, file_name))
     return flask.jsonify(result)
 
-@app.route("/{key}/files")
-def return_files_quality():
+@app.route(f"/{key}/files")
+def return_files():
     result=[]
     for file_name in os.listdir(file_dir):
         if((file_name.split("."))[0].endswith("_low_quality")):
@@ -194,11 +195,29 @@ def return_files_quality():
         else:
             result.append(os.path.join(file_dir, file_name))
     return flask.jsonify(result)
-@app.route("/{key}/file/<path:file_name>")
-def serve_low_quality_file(file_name):
-        return str(decrypt_file_return_string(file_name))
 
+@app.route(f"/{key}/file_data/<path:file_name>")
+def serve_file_base64(file_name):
+        return str(decrypt_file_return_string_base64(file_name))
 
+@app.route(f'/{key}/file/<path:file_name>')
+def serve_file(file_name):
+    img_data = base64.b64decode(str(decrypt_file_return_string_base64(file_name)))
+    
+    # Return the decoded binary data with the appropriate MIME type
+    return flask.Response(io.BytesIO(img_data), mimetype='image/png')
+
+@app.route(f'/{key}/file/lowres/<path:file_name>')
+def serve_image_low_res(file_name):
+    file_name_low_quality = os.path.basename(os.path.normpath(file_name))
+    file_name_low_quality = (file_name_low_quality.split("."))[0]
+    file_name_low_quality = file_name_low_quality + "_low_quality.jpg"
+    file_name_low_quality = file_name.replace(os.path.basename(os.path.normpath(file_name)),"") + file_name_low_quality
+    
+    img_data = base64.b64decode(str(decrypt_file_return_string_base64(file_name_low_quality)))
+    
+    # Return the decoded binary data with the appropriate MIME type
+    return flask.Response(io.BytesIO(img_data), mimetype='image/png')
 
 
 # todo
