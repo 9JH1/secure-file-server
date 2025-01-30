@@ -70,6 +70,7 @@ def decrypt_file_return_string(path):
         print(f"Error decrypting file {path}: {e}")
         return None
 
+
 def encrypt_string_return_string(string):
     try:
         return fernet.encrypt(string.encode())
@@ -85,6 +86,18 @@ def decrypt_string_return_string(string):
         return None
 
 def decrypt_file_return_string_base64(path):
+    try:
+        with open(path, 'rb') as file:
+            first = file.read()
+        decrypted = fernet.decrypt(first)
+        base64_string = base64.b64encode(decrypted).decode("utf-8")
+        print(f"decrypted: {path}")
+        return base64_string
+    except Exception as e:
+        print(f"Error in decrypt_file_return_string_base64: {e}")
+        return None
+
+def decrypt_file_return_string_base64_local(fernet,path):
     try:
         with open(path, 'rb') as file:
             first = file.read()

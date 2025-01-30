@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script title="config">
+        const ip = "http://192.168.68.105:4040";
+    </script>
+    <script title="fetch functions">
+        function getData(endpoint) {
+            return fetch(`${ip}${endpoint}`)
+                .then((res) => res.text())
+                .catch((error) => {
+                    console.error(error);
+                });
+        }
+        function getDataFile(endpoint) {
+            return fetch(`${ip}${endpoint}`)
+                .then((res) => {
+                    const totalSize = res.headers.get('content-length'); // Get the total file size
+                    let loaded = 0; // Track the loaded amount
+
+                    const reader = res.body.getReader(); // Create a reader for the stream
+                    const decoder = new TextDecoder(); // Decoder to convert bytes to string
+                    const chunks = []; // Store chunks as they arrive
+
+                    // Function to read the stream
+                    function readStream() {
+                        return reader.read().then(({ done, value }) => {
+                            if (done) {
+                                return new TextDecoder().decode(new Uint8Array(chunks));
+                            }
+
+                            loaded += value.length; // Update loaded amount
+                            const percent = (loaded / totalSize) * 100; // Calculate progress percentage
+                            console.log(`Loading: ${percent.toFixed(2)}%`);
+
+                            chunks.push(value); // Add chunk to array
+                            return readStream(); // Continue reading the stream
+                        });
+                    }
+
+                    return readStream();
+                })
+                .catch((error) => {
+                    console.error(error);
+                });
+        }
+
+        async function getData200(endpoint) {
+            try {
+                const a = await fetch(`${ip}${endpoint}`)
+                if (a.ok) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } catch {
+                return false;
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --background: white;
+            --foreground: rgb(0, 0, 0);
+            --background_surface: rgb(190, 190, 190);
+            --foreground_surface: rgb(15, 15, 15);
+            --background_surface_surface: #a5a5a5;
+            --foreground_surface_surface: rgb(44, 44, 44);
+            --fail: red;
+            --loading: orange;
+            --success: green;
+            --soft-error: rgb(206, 109, 109);
+        }
+
+        * {
+            color: var(--foreground);
+        }
+
+        body {
+            margin: 0px;
+            width: 100vw;
+            height: fit-content;
+            font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+            background: var(--background);
+        }
+
+        .page {
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .fixed {
+            position: fixed;
+
+        }
+
+        .signin {
+            background: var(--background);
+            color: var(--foreground);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: fixed;
+            display: flex;
+
+            .content {
+                width: 100vw;
+                height: 100vh;
+                background: url("/static/background.jpeg");
+                background-position: center;
+                background-size: cover;
+            }
+
+            .signin-inner {
+                width: fit-content;
+                height: fit-content;
+                background: var(--background_surface);
+                padding: 20px;
+                position: absolute;
+
+                * {
+                    margin: 0px;
+                }
+
+                .title {
+                    text-align: center;
+                    margin-bottom: 10px;
+                    border-bottom: 2px solid var(--background_surface_surface);
+                    padding-bottom: 5px;
+                }
+
+                .password-input {
+                    --height: 30px;
+                    --minor-padding: 5px;
+                    margin-bottom: var(--minor-padding);
+                    display: flex;
+                    flex-wrap: wrap;
+
+                    p {
+                        padding-left: var(--minor-padding);
+                    }
+
+                    .input {
+                        width: calc(100% - var(--height));
+                        padding: 0px;
+                        border: none;
+                        height: var(--height);
+                        box-sizing: border-box;
+                        background: var(--background_surface_surface);
+                        padding: var(--minor-padding);
+                        border: 2px var(--foreground_surface_surface) solid;
+                        border-right: none;
+
+                    }
+
+                    .button {
+                        position: relative;
+                        width: var(--height);
+                        height: var(--height);
+                        padding: 0px;
+                        border: none;
+                        box-sizing: border-box;
+                        background: transparent;
+                        background: var(--background_surface_surface);
+                        border: 2px var(--foreground_surface_surface) solid;
+                        border-left: none;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        transition: background 0.3s ease;
+
+                        .status {
+                            width: calc((var(--height) / 100)*40);
+                            height: calc((var(--height) / 100)*40);
+                            background: var(--foreground);
+                            overflow: hidden;
+                            border-radius: 100px;
+
+                            .status-inner {
+                                height: 100%;
+                                transition: width 5s linear, opacity 0.3s ease;
+                                background: var(--loading);
+                                width: 0px;
+                            }
+                        }
+                    }
+
+                    .button:hover {
+                        background: var(--background_surface);
+                    }
+
+
+                }
+
+                .button-submit {
+                    width: 100%;
+                    height: 30px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+
+                    .submit {
+                        height: 30px;
+                        padding: 5px;
+                        display: flex;
+                        align-items: center;
+                        border: 2px var(--foreground_surface_surface) solid;
+                        background: var(--background_surface_surface);
+                        transition: background 0.3s ease;
+                    }
+
+                    .disabled {
+                        opacity: 0.5;
+                    }
+
+                    .submit:hover {
+                        background: var(--background_surface);
+                    }
+                }
+            }
+        }
+
+        .files {
+            --PADDING: 30px;
+            background: var(--background);
+            color: var(--foreground);
+            padding-left: var(--PADDING);
+            padding-right: var(--PADDING);
+            box-sizing: border-box;
+
+            #files {
+                .file {
+                    width: 100%;
+                }
+            }
+
+            .file-controls {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 5px;
+                gap: 10px;
+
+                .button {
+                    background: var(--background_surface);
+                    padding: 5px;
+                }
+            }
+
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page fixed signin" id="sign-in">
+        <div class="content"></div>
+        <div class="signin-inner">
+            <h2 class="title">Sign in to <b><span class="format-ip"></span></b></h2>
+            <div class="password-input">
+                <p><b>Server</b> Password</p>
+                <input type="password" placeholder="Enter Password" required class="input" id="sign-in-server-password">
+                <button class="button" title="password status">
+                    <div class="status" id="sign-in-server-password-status">
+                        <div class="status-inner"></div>
+                    </div>
+                </button>
+            </div>
+            <div class="password-input">
+                <p><b>File</b> Password</p>
+                <input type="password" placeholder="Enter Password" required class="input" id="sign-in-file-password">
+                <button class="button" title="password status">
+                    <div class="status" id="sign-in-file-password-status">
+                        <div class="status-inner"></div>
+                    </div>
+                </button>
+            </div>
+            <div class="button-submit">
+                <button class="submit" id="sign-in-submit-button">Enter</button>
+            </div>
+        </div>
+    </div>
+    <div class="page files">
+        <div id="files">
+        </div>
+        <div class="file-controls">
+            <a id="file-control-prev" class="button">prev</a>
+            <div class="buttons" id="file-control-text"></div>
+            <a id="file-control-next" class="button">next</a>
+        </div>
+    </div>
+    <script title="replace format strings">
+        document.querySelectorAll(".format-ip").forEach((element) => {
+            if (ip == "")
+                element.innerText = String(location).split("/")[2];
+            else
+                element.innerText = String(ip).split("/")[2];
+        })
+    </script>
+    <script>
+        function d(a) {
+            return document.getElementById(a);
+        }
+        function cend(string, array = []) {
+            for (let arg of array) {
+                if (string.endsWith(arg)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        (() => {
+            const page = d("sign-in");
+            const server_password = d("sign-in-server-password");
+            const file_password = d("sign-in-file-password");
+            const server_password_status = d("sign-in-server-password-status");
+            const file_password_status = d("sign-in-file-password-status");
+            const submit_button = d("sign-in-submit-button");
+
+            /*> removed due to insecurity ;b 
+            server_password.addEventListener("mouseenter", () => {
+                server_password.type = "text"
+            })
+            server_password.addEventListener("mouseleave", () => {
+                server_password.type = "password"
+            })
+            file_password.addEventListener("mouseenter", () => {
+                file_password.type = "text"
+            })
+            file_password.addEventListener("mouseleave", () => {
+                file_password.type = "password"
+            })
+                */
+
+            submit_button.addEventListener("click", async () => {
+                if (server_password.value != "" && file_password.value != "") {
+                    // time for the hard part
+                    const status_code_1 = server_password_status.querySelectorAll(".status-inner")[0];
+                    status_code_1.remove();
+                    const status_code = document.createElement("div");
+                    status_code.classList.add("status-inner");
+                    server_password_status.append(status_code)
+                    status_code.style.width = `${server_password_status.getBoundingClientRect().width}px`
+                    const key = await getData(`/encrypt/${server_password.value}`);
+                    if (await getData200(`/${key}/`)) {
+                        status_code.style.opacity = 0;
+                        server_password_status.style.background = "var(--success)";
+                        // now load the second set of credentials
+                        const status_code_2 = file_password_status.querySelectorAll(".status-inner")[0];
+                        status_code_2.remove()
+
+                        const status_code_file = document.createElement("div");
+                        status_code_file.classList.add("status-inner");
+
+                        file_password_status.append(status_code_file);
+                        status_code_file.style.width = `${file_password_status.getBoundingClientRect().width}px`
+                        const fernet_key = await getData(`/${key}/gen_fernet/${file_password.value}`);
+                        run_file(key, fernet_key.replace(/(\r\n|\n|\r)/gm, ""), 0);
+                        setTimeout(() => {
+                            page.remove();
+                        }, 2000)
+
+
+                    } else {
+                        status_code.style.opacity = 0;
+                        server_password_status.style.background = "var(--fail)";
+                        server_password_status.value = "";
+                    }
+                } else {
+                    if (server_password.value == "") {
+                        server_password.style.background = "var(--soft-error)";
+                    }
+
+                    if (file_password.value == "") {
+                        file_password.style.background = "var(--soft-error)";
+                    }
+                }
+            })
+        })()
+    </script>
+    <script>
+        function createAudioElement(url) {
+            try {
+                // Extract the file extension from the URL
+                const extension = url.split('.').pop().toLowerCase();
+
+                // Map file extensions to their corresponding MIME types
+                const mimeTypes = {
+                    mp3: 'audio/mpeg',
+                    wav: 'audio/wav',
+                    ogg: 'audio/ogg',
+                    flac: 'audio/flac',
+                    m4a: 'audio/x-m4a',
+                };
+
+                // Get the MIME type for the file based on the extension
+                const mimeType = mimeTypes[extension] || 'audio/mpeg'; // Default to 'audio/mpeg' if unknown
+
+                // Create the audio element
+                let audio = document.createElement('audio');
+                audio.controls = true;
+
+                // Create the source element and set the MIME type
+                let source = document.createElement('source');
+                source.src = url;
+                source.type = mimeType;
+
+                // Append the source to the audio element
+                audio.appendChild(source);
+
+                // Return the created audio element
+                return audio;
+            } catch (error) {
+                console.error('Error creating audio element with extension:', error);
+                return null; // Return null in case of error
+            }
+        }
+
+        function makeUrlFriendly(phrase) {
+            // Encode the string into UTF-8 bytes
+            const encoder = new TextEncoder();
+            const data = encoder.encode(phrase);
+
+            // Convert the UTF-8 byte array to Base64
+            const base64 = btoa(String.fromCharCode(...data));
+
+            // Manually make Base64 URL-safe and strip padding
+            const urlSafeBase64 = base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+            return urlSafeBase64;
+        }
+        function cend(string, array = []) {
+            for (let arg of array) {
+                if (String(string).endsWith(arg)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        function cendr(string, array = []) {
+            for (let arg of array) {
+                if (String(string).endsWith(arg)) {
+                    return arg;
+                }
+            }
+            return false
+        }
+        function shuffle(array) {
+            let currentIndex = array.length;
+
+            // While there remain elements to shuffle...
+            while (currentIndex != 0) {
+
+                // Pick a remaining element...
+                let randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+
+                // And swap it with the current element.
+                [array[currentIndex], array[randomIndex]] = [
+                    array[randomIndex], array[currentIndex]];
+            }
+        }
+
+        async function run_file(key, fernet_key, page_number = 0, files = []) {
+
+            const params = new URLSearchParams(location.search);
+
+            const page = document.getElementById("files");
+            page.querySelectorAll("*").forEach((element) => {
+                element.src = ""
+            })
+            page.innerHTML = "";
+            if (params.has("page") && page_number === 0) {
+                page_number = Number(parseInt(params.get("page")));
+            }
+
+            let file_per_page = 10;
+            if (files.length == 0) {
+                files = await getData(`/${key}/files`);
+                try {
+                    files = JSON.parse(files)
+                } catch {
+                    location.reload()
+                }
+            }
+
+            if (params.has("shuffle")) {
+                if (params.get("shuffle") == "true") {
+                    shuffle(files);
+                }
+            }
+            let pages = Math.round(files.length / file_per_page) - 1;
+            const page_controls = document.getElementById("file-control-text");
+            page_controls.innerHTML = "";
+            const page_controls_next = document.getElementById("file-control-next");
+            const page_controls_prev = document.getElementById("file-control-prev");
+            page_controls_prev.replaceWith(page_controls_prev.cloneNode(true));
+            page_controls_next.replaceWith(page_controls_next.cloneNode(true));
+            window.history.pushState('page2', 'IDK', `?page=${page_number}`);
+            document.getElementById("file-control-prev").addEventListener("click", () => {
+                run_file(key, fernet_key, Number(page_number) - 1, files);
+                return;
+            });
+            document.getElementById("file-control-next").addEventListener("click", () => {
+                run_file(key, fernet_key, Number(page_number) + 1, files);
+                return;
+            });
+            const naa = document.createElement("a");
+            naa.innerText = `0 ...`
+            naa.addEventListener("click", () => {
+                run_file(key, fernet_key, 0, files);
+                return;
+            })
+            page_controls.append(naa);
+            for (let i = 1; i < 5; i++) {
+                function mask() {
+                    run_file(key, fernet_key, page_number + i, files);
+                    return
+                }
+                const na = document.createElement("a");
+
+                if (page_number + i == page_number) {
+                    na.innerHTML = `<span class="selected">${page_number}</span>`
+                } else {
+                    na.innerText = page_number + i + " ";
+                }
+                page_controls.append(na);
+                na.addEventListener("click", mask);
+
+            }
+            const naa2 = document.createElement("a");
+            naa.innerText = ` ... ${pages}`
+            naa.addEventListener("click", () => {
+                run_file(key, fernet_key, pages, files);
+                return
+            })
+            page_controls.append(naa);
+            let lowres = false;
+            for (let i = 0; i < file_per_page; i++) {
+                let file = i + (file_per_page * page_number);
+                if (file <= files.length - 1) {
+                    console.log(`file loaded on page ${page_number}/${pages}|${file}/${files.length - 1} - ${files[file]}`);
+                    let newEle;
+                    if (cend(files[file], ["png", "webp", "jpg", "jpeg", "gif", "bmp"])) {
+                        newEle = document.createElement("img");
+
+                        newEle.src = `${ip}/${key}/file` + files[file];
+                    } else if (cend(files[file], ["mp4", "webm", "avi"])) {
+                        newEle = document.createElement("video");
+                        newEle.src = `${ip}/${key}/file` + files[file];
+                        newEle.setAttribute("controls", "controls")
+
+                    } else if (cend(files[file], ["wav", "ogg", "mp3", "m4a"])) {
+                        newEle = createAudioElement(`${ip}/${key}/file` + files[file]);
+                    } else if (cend(files[file], ["pdf"])) {
+                        newEle = document.createElement("embed");
+                        newEle.src = `${ip}/${key}/file` + files[file];
+                    } else {
+                        continue;
+                    }
+                    let errorcount = 0;
+                    newEle.onerror = function () {
+                        errorcount++;
+                        if (errorcount > 3) {
+                            newEle.remove();
+
+                        }
+                        setTimeout(() => {
+                            newEle.src = newEle.src;
+                        }, 1000);
+                    }
+                    newEle.classList.add("file");
+                    page.append(newEle);
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>

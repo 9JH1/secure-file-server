@@ -5,145 +5,518 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <style>
+        :root {
+            --background: pink;
+            --background-surface: #cccccc;
+            --foreground: rgb(46, 46, 46);
+            --foreground-surface: white;
+        }
+
+        * {
+            margin: 0px;
+        }
+
+        body {
+            background: var(--background);
+            margin: 0px;
+            padding: 0px;
+            width: 100vw;
+            height: 100vh;
+            overflow-x: hidden;
+
+            #content {
+                position: absolute;
+                box-sizing: border-box;
+                width: 100vw;
+                height: 100vh;
+                padding: 10px;
+                top: 0%;
+                left: 0%;
+                background: transparent;
+                backdrop-filter: blur(20px);
+
+                .top-bar {
+                    width: 100%;
+                    height: 100px;
+                    box-sizing: border-box;
+
+                    .text-actions,
+                    .audio-actions {
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                    }
+
+                    .text-actions {
+                        .title {
+                            color: var(--foreground);
+                        }
+
+                        button {
+                            background: transparent;
+                            border: none;
+
+                            svg {
+                                fill: var(--foreground);
+                            }
+                        }
+                    }
+
+                    .audio-actions {
+                        .play-pause {
+                            border-radius: 100%;
+                            border: none;
+                            min-height: 50px;
+                            min-width: 50px;
+                            max-width: 50px;
+                            max-height: 50px;
+                            margin: 0px;
+                            padding: 0px;
+                            overflow: hidden;
+                            background: var(--foreground);
+
+                            .icon-play,
+                            .icon-pause {
+                                width: 50px;
+                                height: 50px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+
+                                svg {
+                                    path {
+                                        fill: var(--foreground-surface);
+                                    }
+                                }
+                            }
+
+                        }
+
+                        .play {
+                            .icon-play {
+                                display: none;
+                            }
+                        }
+
+                        .bar {
+                            width: 100%;
+                            padding: 10px;
+                            display: flex;
+                            align-content: center;
+
+                            #seek {
+                                cursor: e-resize;
+                                -webkit-appearance: none;
+                                appearance: none;
+                                width: 100%;
+                                background: #d3d3d3;
+                                outline: none;
+                                border-radius: 10px;
+                                height: 6px;
+
+
+                            }
+                        }
+                    }
+                }
+
+                .bottom-bar {
+                    width: 100%;
+                    background-color: red;
+                    height: 30px;
+
+                }
+
+                #files {
+                    background: rgba(0, 0, 0, 0.1);
+                    border-radius: 10px;
+                    margin-top: 10px;
+                    overflow: scroll;
+                    padding: 10px;
+                    margin-bottom: 10px;
+                    height: calc(100vh - 190px);
+
+                    .children {
+                        display: none;
+                        margin-left: 10px;
+                    }
+
+                    .visible {
+                        display: block !important;
+                    }
+
+                    .directory {
+                        color: blue;
+                        text-decoration: underline;
+
+                        .title {
+                            cursor: pointer;
+                        }
+                    }
+                }
+
+                .bottom-bar {
+                    width: 100%;
+
+                    input {
+                        width: 100%;
+                        height: 100%;
+                        outline: none;
+                        border: none;
+                        margin: 0px;
+                        padding: 10px;
+                        box-sizing: border-box;
+                    }
+
+                }
+            }
+
+            #background {
+                width: 100vw;
+                height: 100vh;
+                display: none;
+                position: fixed;
+                z-index: 1000000;
+                backdrop-filter: blur(10px);
+
+                .content {
+                    height: calc(100% - 5vh);
+
+                    width: 100%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    overflow: hidden;
+                    object-fit: cover;
+                    padding: 0px;
+
+                    .file-act {
+                        width: 100%;
+                        height: 100%;
+                        background-repeat: no-repeat;
+                        background-position: center;
+                        background-size: fill;
+                        object-fit: contain;
+                    }
+                }
+
+                .controls {
+                    display: flex;
+                    width: 100%;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 10px;
+                    box-sizing: border-box;
+                    height: 5vh;
+                }
+
+            }
+
+        }
+
+        .code {
+            white-space: pre;
+            font-family: monospace;
+            overflow-x: scroll;
+            width: 100vw;
+            max-height: 30vh;
+            background: red;
+        }
+
+        #signin {
+            width: 100vw;
+            height: 100vh;
+            position: fixed;
+            top: 0%;
+            left: 0%;
+            background: var(--background);
+            display: none;
+            align-content: center;
+            justify-items: center;
+
+            .ui {
+                width: 100%;
+                height: fit-content;
+                background: var(--background-surface);
+            }
+        }
+    </style>
 </head>
 
 <body>
-    <div class="shadow" id="server">
-        <input type="password" placeholder="Server Password" id="server-password">
-        <button id="server-show-password">Show Password</button>
-        <button id="server-submit">Submit</button>
-        <div id="server-status">Enter Password</div>
+    <div id="background">
+        <div class="controls">
+            <div class="pos" id="background-prev">prev</div>
+            <div class="close" id="background-close">close</div>
+            <div class="pos" id="background-next">next</div>
+        </div>
+        <div class="content" id="background-content"></div>
     </div>
-    <div class="control">
-        <button class="unsafe" disabled>decrypt all <span class="tip">(fast + server intensive)</span></button>
-        <button class="unsafe" disabled>hotload all <span class="tip">(fast + client intensive)</span></button>
-        <button class="safe">sample load <span class="tip">(moderate speed)</span></button>
-        <button class="safe" disabled>encrypt all <span class="tip">(fast + server intensive)</span></button>
-        <button class="safe" disabled>encrypt selected</button>
-        <button class="safe" disabled>decrypt selected</button>
-        <div id="encryption">
-            <input type="password" placeholder="Server Password" id="encryption-password">
-            <button id="encryption-show-password">Show Password</button>
-            <button id="encryption-submit">Submit</button>
+    <div id="content">
+        <div class="top-bar">
+            <div class="text-actions">
+                <h1 class="title">RANDOM FILE:</h1>
+                <button id="download">
+                    <svg xmlns="http://www.w3.org/2000/svg" height="30px" viewBox="0 -960 960 960" width="30px">
+                        <path
+                            d="M480-320 280-520l56-58 104 104v-326h80v326l104-104 56 58-200 200ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z" />
+                    </svg>
+                </button>
+            </div>
+            <div class="audio-actions">
+                <button class="play-pause" id="play-pause-indicator">
+                    <div class="icon-play">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"
+                            fill="#e8eaed">
+                            <path d="M320-200v-560l440 280-440 280Zm80-280Zm0 134 210-134-210-134v268Z" />
+                        </svg>
+                    </div>
+                    <div class="icon-pause"><svg xmlns="http://www.w3.org/2000/svg" height="24px"
+                            viewBox="0 -960 960 960" width="24px" fill="#e8eaed">
+                            <path
+                                d="M520-200v-560h240v560H520Zm-320 0v-560h240v560H200Zm400-80h80v-400h-80v400Zm-320 0h80v-400h-80v400Zm0-400v400-400Zm320 0v400-400Z" />
+                        </svg></div>
+                </button>
+                <div class="bar">
+                    <input type="range" name="" id="seek" value="0" max="100" min="0">
+                </div>
+                <div class="time">00:00/00:00</div>
+            </div>
+        </div>
+        <div id="files">
+            <div class="children visible"></div>
+        </div>
+        <div class="bottom-bar">
+            <input type="text" placeholder="Filter">
         </div>
     </div>
-    <div class="files" id="files">
-
-        <div class="spacer">loading more files...</div>
+    <div id="signin">
+        <div class="ui">
+            <input type="password" name="" id="">
+            <input type="password" name="" id="">
+            <button>enter</button>
+        </div>
     </div>
-    <script>
-        let ip = "192.168.68.105:4040"
-        let server_password = ""
-        let error_count = 0
-        function getData(endpoint) {
-            return fetch(`http://${ip}/${endpoint}`, { signal: AbortSignal.timeout(5000) })
-                .then((res) => res.text())
-                .catch((error) => {
-                    error_count++;
-                    if (error_count > 10) {
-                        console.log("toggling off server requests due to too many errors")
-                    }
-                    console.error(error);
-                });
-        }
-        (function () {
-            const server = document.getElementById("server");
-            const password = document.getElementById("server-password");
-            const submit = document.getElementById("server-submit");
-            const status = document.getElementById("server-status");
-            const showPassword = document.getElementById("server-show-password");
-            async function loadKey() {
-                status.innerHTML = "Generating Key..."
-                submit.disabled = true;
-                password.disabled = true;
-                let key = await getData(`encrypt/${password.value}`)
-                status.innerHTML = key
-                setTimeout(async () => {
-                    // more scopes but its gotta look cool
-                    status.innerHTML = "Testing Value..."
-                    let res = await getData(`${key}`);
-                    if (res == "welcome") {
-                        server_password = key
-                        status.innerHTML = "Key Accepted!"
-                        setTimeout(() => { server.remove() }, 300)
-                        if (isStorageCapable()) {
-                            localStorage.setItem("server_password", key)
-                        }
-                    } else {
-                        status.innerHTML = "Key Not Accepted."
-                        submit.disabled = false;
-                        password.disabled = false;
-                        password.value = "";
-                    }
-                }, 100)
 
-            }
-            submit.addEventListener("click", loadKey)
-            password.addEventListener('keypress', function (e) {
-                if (e.key === 'Enter') {
-                    loadKey();
-                }
-            });
-            showPassword.addEventListener("mousedown", () => {
-                password.type = "text"
-            })
-            showPassword.addEventListener("mouseup", () => {
-                password.type = "password"
-            })
-        })();
-        (function () {
-
-            const encryption = document.getElementById("encryption");
-            const password = document.getElementById("encryption-password");
-            const submit = document.getElementById("encryption-submit");
-            const showPassword = document.getElementById("encryption-show-password");
-            async function loadKey() {
-                password.value = ""
-            }
-            submit.addEventListener("click", loadKey)
-            password.addEventListener('keypress', function (e) {
-                if (e.key === 'Enter') {
-                    loadKey();
-                }
-            });
-            showPassword.addEventListener("mousedown", () => {
-                password.type = "text"
-            })
-            showPassword.addEventListener("mouseup", () => {
-                password.type = "password"
-            })
-        })();
-        (async function () {
-            if (isStorageCapable() && localStorage.getItem("server_password") != undefined) {
-
-                document.getElementById("server-status").innerHTML = "Loading Details From Storage"
-                let key = localStorage.getItem("server_password");
-
-                document.getElementById("server-status").innerHTML = "Testing Value..."
-                let res = await getData(`${key}`);
-                if (res == "welcome") {
-                    // works
-                    status.innerHTML = "Key Accepted!"
-                    document.getElementById("server").remove()
-                    server_key = key
-                } else {
-                    document.getElementById("server-status").innerHTML = "Key Not Accepted."
-                }
-            }
-
-        })()
-        async function loadFiles() {
-            const files = document.getElementById("files")
-            const fileList = await getData("key")
-        }
-        function isStorageCapable() {
-            if (typeof (Storage) !== "undefined") {
-                return true
-            } else {
-                return false
-            }
-        }
-    </script>
 </body>
+<script>
+    const page = document.getElementById("files")
+    let files = "waiting";
+    function createAudioElement(url) {
+        try {
+            // Extract the file extension from the URL
+            const extension = url.split('.').pop().toLowerCase();
+
+            // Map file extensions to their corresponding MIME types
+            const mimeTypes = {
+                mp3: 'audio/mpeg',
+                wav: 'audio/wav',
+                ogg: 'audio/ogg',
+                flac: 'audio/flac',
+                m4a: 'audio/x-m4a',
+            };
+
+            // Get the MIME type for the file based on the extension
+            const mimeType = mimeTypes[extension] || 'audio/mpeg'; // Default to 'audio/mpeg' if unknown
+
+            // Create the audio element
+            let audio = document.createElement('audio');
+            audio.controls = true;
+
+            // Create the source element and set the MIME type
+            let source = document.createElement('source');
+            source.src = url;
+            source.type = mimeType;
+
+            // Append the source to the audio element
+            audio.appendChild(source);
+
+            // Return the created audio element
+            return audio;
+        } catch (error) {
+            console.error('Error creating audio element with extension:', error);
+            return null; // Return null in case of error
+        }
+    }
+    let file_paths = [];
+    function cend(string, array = []) {
+        for (let arg of array) {
+            if (String(string).endsWith(arg)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    (async () => {
+        files = await fetch("http://192.168.68.105:4040/75e9bc89514d1b8ca251cbd922500acee7dd102922cb4e671e9dbdf63cbbdd8c/files")
+            .then((res) => res.text())
+            .catch((err) => console.log(err));
+        files = JSON.parse(files);
+
+        let curpath = "";
+
+        function loadFile(raw_path) {
+            const basePath = "http://192.168.68.105:4040/75e9bc89514d1b8ca251cbd922500acee7dd102922cb4e671e9dbdf63cbbdd8c/file/home/_3hy/.enc/";
+            const path = basePath + raw_path;
+            const background = document.getElementById("background");
+            background.style.display = "block";
+
+            let newEle;
+            let currentController = new AbortController();
+            const signal = currentController.signal;
+
+            // Clean up previous content
+            const backgroundContent = document.getElementById("background-content");
+            while (backgroundContent.firstChild) {
+                backgroundContent.firstChild.remove();
+            }
+            // Create appropriate element based on file type
+            if (cend(path, ["png", "webp", "jpg", "jpeg", "gif", "bmp"])) {
+                newEle = document.createElement("img");
+                newEle.src = path;
+
+            } else if (cend(path, ["mp4", "webm", "avi"])) {
+                newEle = document.createElement("video");
+                newEle.src = path;
+                newEle.setAttribute("controls", "controls");
+
+            } else if (cend(path, ["wav", "ogg", "mp3", "m4a"])) {
+                newEle = createAudioElement(path);
+
+            } else if (cend(path, ["pdf"])) {
+                newEle = document.createElement("embed");
+                newEle.src = path;
+
+            } else if (cend(path, ["txt", "log", "js"])) {
+                newEle = document.createElement("code");
+                (async () => {
+                    try {
+                        const response = await fetch(path, { signal });
+                        if (!response.ok) throw new Error(`Failed to fetch: ${response.statusText}`);
+                        newEle.innerText = await response.text();
+                        newEle.classList.add("code");
+                    } catch (err) {
+                        if (err.name === "AbortError") {
+                            console.log("Fetch aborted");
+                        } else {
+                            console.error(err);
+                        }
+                    }
+                })();
+            } else {
+                console.log(path)
+            }
+
+            // Handle element load errors
+            let errorCount = 0;
+            newEle.onerror = function () {
+                errorCount++;
+                if (errorCount > 3) {
+                    newEle.remove();
+                    console.error("Failed to load file after multiple attempts.");
+                    return;
+                }
+                setTimeout(() => {
+                    newEle.src = newEle.src;
+                }, 1000);
+            };
+
+            // Add new element to content
+            newEle.classList.add("file-act");
+            backgroundContent.append(newEle);
+
+            // Navigation functions
+            function r_prev() {
+                currentController.abort(); // Stop current loading
+                loadFile(file_paths[file_paths.indexOf(raw_path) - 1]);
+            }
+            function r_next() {
+                currentController.abort(); // Stop current loading
+                loadFile(file_paths[file_paths.indexOf(raw_path) + 1]);
+            }
+
+            // Attach navigation handlers
+            const prev = document.getElementById("background-prev");
+            const next = document.getElementById("background-next");
+            prev.replaceWith(prev.cloneNode(true)); // Clear previous event listeners
+            next.replaceWith(next.cloneNode(true));
+            document.getElementById("background-prev").addEventListener("click", r_prev);
+            document.getElementById("background-next").addEventListener("click", r_next);
+        }
+
+        (() => {
+            const prev = document.getElementById("background-prev");
+            const next = document.getElementById("background-next");
+            const close = document.getElementById("background-close");
+            const page = document.getElementById("background");
+            const content = document.getElementById("background-content")
+
+            close.addEventListener("click", () => {
+                page.style.display = "none"
+                content.innerHTML = ""
+            })
+
+
+
+        })();
+        function loadCont(id, data, path) {
+            for (var obj of data.children) {
+                const fullPath = path + obj.name;
+                const nc = document.createElement("div");
+                file_paths.push(fullPath)
+                nc.classList.add("file");
+                nc.innerHTML = `<div class="title" data-path="${fullPath}">${obj.name}</div> <div class="children"></div>`;
+                id.querySelector(".children").append(nc);
+                if (obj.children && obj.children.length > 0) {
+                    nc.querySelector(".title").innerText += "/";
+                    nc.classList.remove("file");
+                    nc.classList.add("directory");
+                    loadCont(nc, obj, fullPath + "/");
+                    nc.querySelectorAll(".title")[0].addEventListener("click", () => {
+                        nc.querySelectorAll(".children")[0].classList.toggle("visible");
+                    })
+                } else {
+                    nc.addEventListener("click", () => {
+                        loadFile(fullPath);
+                    })
+                }
+            }
+        }
+        loadCont(page, files, curpath);
+    })();
+
+    // (() => {
+    let uri = "";
+    //  for(!cend(uri, ["mp4", "avi", "mp3", "wav", "m4a", "mkv", "webm"])) {
+    uri = "http://192.168.68.105:4040/75e9bc89514d1b8ca251cbd922500acee7dd102922cb4e671e9dbdf63cbbdd8c/file/home/_3hy/.enc/" + file_paths[Math.floor(Math.random() * file_paths.length)];
+    //  };
+    const play = document.getElementById("play-pause-indicator");
+    var audio = new Audio(uri)
+    document.getElementById("download").addEventListener("click", function () {
+        fetch(uri)
+            .then(resp => resp.blob())
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = uri;
+                document.body.appendChild(a);
+                if (a.download !== "null") {
+                    a.click();
+                }
+                window.URL.revokeObjectURL(url);
+            })
+            .catch(() => console.log('Could not download file.' + uri));
+    });
+
+    /* play.addEventListener("click", () => {
+         play.classList.toggle("play");
+     })*/
+    //})()
+
+
+</script>
 
 </html>
