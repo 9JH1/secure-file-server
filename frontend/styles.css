@@ -1,0 +1,82 @@
+/* styles.css */
+@import url("./theme.css");
+:root {
+    --title-bar-size:30px;
+    --side-bar-size:50px;
+}
+body {
+    margin:0px;
+    padding:0px;
+    width:100vw;
+    height:100vh;
+    background:var(--background);
+    color:var(--foreground);
+}
+
+
+body .title-bar {
+    width:100vw;
+    height:var(--title-bar-size);
+    background:var(--background-surface-one);
+    display:flex;
+    align-items: center;
+    justify-content: space-between;
+    -webkit-app-region: drag;
+    
+}
+body .title-bar .group { 
+    -webkit-app-region: no-drag;
+}
+
+body .title-bar .buttons {
+    display:flex;
+    align-items: center;
+    justify-content: space-between;
+    box-sizing: border-box;
+    padding:10px;
+    gap:10px;
+
+}
+
+body .title-bar .buttons .button {
+    width:15px;
+    height:15px;
+    border-radius: 100%;
+
+}
+
+body .title-bar-rest {
+    height:calc(100vh - var(--title-bar-size));
+    width:100vw;
+    display:flex
+}
+
+body .title-bar-rest .side {
+    width:var(--side-bar-size);
+    height:100%;
+    background:var(--background-surface-one);
+}
+body .title-bar-rest .side-rest {
+    width:calc(100vw - var(--side-bar-size));
+    height:100%;
+    background:red;
+}
+
+body .title-bar .search { 
+    height:80%;
+    width:60%;
+    background:orange;
+    border-radius: 5px;
+}
+body .title-bar .options {
+    display:flex;
+    align-items: center;
+    justify-content: center;
+    padding:10px;
+    gap:10px;
+
+}
+
+body .title-bar .options svg path { 
+    fill:var(--foreground); /* this is useful for later */
+}

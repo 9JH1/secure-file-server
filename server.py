@@ -15,18 +15,12 @@ import os
 import uuid
 import mimetypes
 
-
-loading_log = {}
-key_file = '../test.key'
 port = 4040
 file_dir = "/home/_3hy/.enc/"
-temp_dir = "./resources/"
 app = flask.Flask(__name__)
 CORS = flask_cors.CORS(app)
 key = "75e9bc89514d1b8ca251cbd922500acee7dd102922cb4e671e9dbdf63cbbdd8c"
 set_key("sYibxVcu1QDal1uETk-G4nho___kPjHhYwFzMFSXEGo= ".encode())
-login_message = "welcome"
-fernet = False;
 
 def get_ping():
     try:
@@ -167,12 +161,6 @@ for file_name in os.listdir(temp_dir):
         print(f"Failed to move {file_name}: {e}")
 """
 
-# app routes:
-@app.route("/")
-def render_website():
-    print(f"\n\033[31mvistor joined:{flask.request.remote_addr}\033[0m\n")
-    return flask.render_template("index.html")
-
 @app.route(f"/{key}/")
 def return_status():
     return flask.Response(status=200)
@@ -186,32 +174,6 @@ def set_fernet(fernet):
 def return_encrypt(text):
     sleep(5)
     return encrypt_string(text)
-
-@app.route(f'/{key}/upload_end', methods=['POST'])
-def upload_file():
-    if 'files' not in flask.request.files:
-        return 'No files part'
-    
-    files = flask.request.files.getlist('files')  # Get list of files from the form
-    
-    if not files:
-        return 'No selected files'
-    
-    uploaded_files = []
-    for file in files:
-        if file.filename == '':
-            return 'One of the files is missing a name'
-        
-        # Save each file to the uploads directory
-        file_path = os.path.join(temp_dir, file.filename)
-        file.save(file_path)
-        uploaded_files.append(file.filename)
-
-    return f"Files uploaded successfully: {', '.join(uploaded_files)}"
-
-@app.route('/upload')
-def render_upload():
-    return flask.render_template("upload.html")
 
 @app.route(f"/{key}/files")
 def print_dir_tree():
