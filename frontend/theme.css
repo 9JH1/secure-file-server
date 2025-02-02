@@ -4,4 +4,7 @@
     --foreground:black;
     --foreground-surface-one:grey;
     --accent-one:magenta;
+    --accent-good: green;
+    --accent-medium: orange;
+    --accent-bad:red;
 }

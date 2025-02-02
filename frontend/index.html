@@ -3,11 +3,9 @@
 
 <head>
   <meta charset="UTF-8">
-  <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
-  <meta http-equiv="Content-Security-Policy"
-    content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'">
   <link href="./styles.css" rel="stylesheet">
   <title>SFS-gui-V1</title>
+  <script src="scripts/term.js" defer></script>
 </head>
 
 <body>
@@ -41,14 +39,17 @@
       <div class="settings" hidden="true">
         Settings
       </div>
-      <div class="app">
+      <div class="app" hidden="true">
 
       </div>
-      <div class="term" hidden="true">
-        Term
+      <div class="term" id="logs">
+        <div class="shadow-top"></div>
+
+        <div class="shadow-bottom">=</div>
       </div>
     </div>
   </div>
+
 </body>
 
 </html>
